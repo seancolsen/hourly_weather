@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Input from './components/Input'
+import Button from './components/Button'
 
 export default function Home() {
   const [zip, setZip] = useState('')
@@ -11,11 +13,11 @@ export default function Home() {
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="flex items-center justify-center h-screen">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <label htmlFor="zip">Enter your zip code</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input
+        <div className="flex gap-2">
+          <Input
             id="zip"
             type="text"
             inputMode="numeric"
@@ -23,7 +25,7 @@ export default function Home() {
             value={zip}
             onChange={(e) => setZip(e.target.value)}
           />
-          <button type="submit">→</button>
+          <Button type="submit">🡆</Button>
         </div>
       </form>
     </div>
