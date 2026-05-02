@@ -20,6 +20,7 @@ export default function Zip() {
   const [error, setError] = useState<string | null>(null)
   const [expandedDay, setExpandedDay] = useState(0)
   const [highlightHour, setHighlightHour] = useState<number | null>(getInitialHighlight)
+  const [fromCache, setFromCache] = useState(false)
 
   // Load centroid
   useEffect(() => {
@@ -63,6 +64,11 @@ export default function Zip() {
         const gridRes = await fetch(forecastGridData, { headers: NWS_HEADERS })
         if (!gridRes.ok) throw new Error('NWS grid request failed')
         const gridData = await gridRes.json()
+
+        const servedFromCache =
+          pointsRes.headers.get('X-Data-Source') === 'cache' ||
+          gridRes.headers.get('X-Data-Source') === 'cache'
+        setFromCache(servedFromCache)
 
         const parsed = parseGridData(gridData, astronomicalData, timeZone)
         setDays(parsed)
@@ -110,6 +116,12 @@ export default function Zip() {
           ☰
         </button>
       </header>
+
+      {fromCache && (
+        <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
+          Showing cached forecast — connect to the internet for the latest data.
+        </div>
+      )}
 
       {error && <p className="p-4 text-red-600">{error}</p>}
       {loading && <p className="p-4 text-gray-500">Loading…</p>}
