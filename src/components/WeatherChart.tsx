@@ -15,7 +15,7 @@ interface WeatherChartProps {
 
 // SVG coordinate system
 const VB_W = 800
-const VB_H = 160
+const VB_H = 320
 const ML = 42 // left margin (y-axis labels)
 const MR = 10
 const MT = 8
@@ -112,8 +112,8 @@ export default function WeatherChart({
   const labelY =
     highlightSvgY !== null
       ? labelAbove
-        ? highlightSvgY - 14
-        : highlightSvgY + 22
+        ? highlightSvgY - 26
+        : highlightSvgY + 38
       : 0
 
   const sunriseX = hourToSvgX(sunrise)
@@ -134,7 +134,7 @@ export default function WeatherChart({
         style={{ display: 'block' }}
       >
         {/* Chart background */}
-        <rect x={ML} y={MT} width={CW} height={CH} fill="#f0f0f0" />
+        <rect x={ML} y={MT} width={CW} height={CH} fill="white" />
 
         {/* Night overlays */}
         <rect
@@ -142,14 +142,14 @@ export default function WeatherChart({
           y={MT}
           width={Math.max(0, sunriseX - ML)}
           height={CH}
-          fill="rgba(0,0,0,0.12)"
+          fill="#f0f0f0"
         />
         <rect
           x={sunsetX}
           y={MT}
           width={Math.max(0, ML + CW - sunsetX)}
           height={CH}
-          fill="rgba(0,0,0,0.12)"
+          fill="#f0f0f0"
         />
 
         {/* Vertical grid lines — every hour */}
@@ -160,10 +160,13 @@ export default function WeatherChart({
             y1={MT}
             x2={hourToSvgX(h)}
             y2={MT + CH}
-            stroke="white"
+            stroke="#cccccc"
             strokeWidth={h % 2 === 0 ? 0.8 : 0.4}
           />
         ))}
+
+        {/* Chart border */}
+        <rect x={ML} y={MT} width={CW} height={CH} fill="none" stroke="#aaaaaa" strokeWidth={1} />
 
         {/* Horizontal grid lines */}
         {yTicks.map((v) => (
@@ -173,7 +176,7 @@ export default function WeatherChart({
             y1={valToSvgY(v, yMin, yMax)}
             x2={ML + CW}
             y2={valToSvgY(v, yMin, yMax)}
-            stroke="white"
+            stroke="#cccccc"
             strokeWidth={0.8}
           />
         ))}
@@ -183,9 +186,9 @@ export default function WeatherChart({
           <text
             key={v}
             x={ML - 4}
-            y={valToSvgY(v, yMin, yMax) + 4}
+            y={valToSvgY(v, yMin, yMax) + 7}
             textAnchor="end"
-            fontSize={10}
+            fontSize={20}
             fill="#666"
           >
             {v}
@@ -216,18 +219,18 @@ export default function WeatherChart({
         {labelText !== null && highlightSvgY !== null && (
           <>
             <rect
-              x={highlightX - 18}
-              y={labelY - 13}
-              width={36}
-              height={15}
-              rx={2}
+              x={highlightX - 30}
+              y={labelY - 22}
+              width={60}
+              height={26}
+              rx={3}
               fill="#22c55e"
             />
             <text
               x={highlightX}
-              y={labelY - 2}
+              y={labelY - 4}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={20}
               fontWeight="bold"
               fill="white"
             >
@@ -243,7 +246,7 @@ export default function WeatherChart({
             x={hourToSvgX(h)}
             y={MT + CH + 16}
             textAnchor="middle"
-            fontSize={10}
+            fontSize={20}
             fill="#555"
             style={{ cursor: 'pointer', userSelect: 'none' }}
             onClick={() => onHighlight(h)}
