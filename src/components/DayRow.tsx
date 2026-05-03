@@ -50,7 +50,11 @@ export default function DayRow({
         <div className="flex gap-4 text-sm flex-shrink-0">
           {summarizedMetrics.map(({ metric: key, summarization }) => {
             const m = metrics[key]
-            const val = Math.round(summarize(forecast.data[key], summarization))
+            const raw = summarize(forecast.data[key], summarization)
+            const val =
+              m.chartHorizontalGridLineFrequency < 1
+                ? raw.toFixed(2)
+                : Math.round(raw)
             return (
               <span
                 key={key}

@@ -29,16 +29,23 @@ function valToSvgY(val: number, yMin: number, yMax: number): number {
   return MT + ((yMax - val) / (yMax - yMin)) * CH
 }
 
-function autoRange(points: Point[]): { yMin: number; yMax: number } {
-  if (points.length === 0) return { yMin: 0, yMax: 100 }
+function autoRange(
+  points: Point[],
+  step: number,
+): { yMin: number; yMax: number } {
+  if (points.length === 0) return { yMin: 0, yMax: step * 10 }
   const vals = points.map((p) => p[1])
   const dataMin = Math.min(...vals)
   const dataMax = Math.max(...vals)
   const span = dataMax - dataMin
-  const pad = Math.max(span * 0.15, 5)
-  const yMin = Math.floor((dataMin - pad) / 10) * 10
-  const yMax = Math.ceil((dataMax + pad) / 10) * 10
+  const pad = Math.max(span * 0.15, step / 2)
+  const yMin = Math.floor((dataMin - pad) / step) * step
+  const yMax = Math.ceil((dataMax + pad) / step) * step
   return { yMin, yMax }
+}
+
+function formatTick(v: number): string {
+  return Number.isInteger(v) ? String(v) : String(Math.round(v * 1000) / 1000)
 }
 
 function polylinePath(svgPoints: [number, number][]): string {
@@ -79,9 +86,10 @@ export default function WeatherChart({
 }: WeatherChartProps) {
   const [hoveredLabel, setHoveredLabel] = useState<number | null>(null)
 
+  const step = metric.chartHorizontalGridLineFrequency
   const { yMin, yMax } = metric.chartRange
     ? { yMin: metric.chartRange.min, yMax: metric.chartRange.max }
-    : autoRange(points)
+    : autoRange(points, step)
 
   const svgPoints: [number, number][] = points.map(([x, y]) => [
     hourToSvgX(x),
@@ -92,7 +100,8 @@ export default function WeatherChart({
 
   // Y-axis ticks
   const yTicks: number[] = []
-  for (let v = yMin; v <= yMax; v += 10) yTicks.push(v)
+  const tickCount = Math.round((yMax - yMin) / step)
+  for (let i = 0; i <= tickCount; i++) yTicks.push(yMin + i * step)
 
   // X-axis labels at even hours 2,4,...,22
   const xLabels = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]
@@ -105,7 +114,7 @@ export default function WeatherChart({
 
   const labelText =
     highlightVal !== null
-      ? `${Math.round(highlightVal)}${metric.unitLabel}`
+      ? `${step < 1 ? highlightVal.toFixed(2) : Math.round(highlightVal)}${metric.unitLabel}`
       : null
 
   // Position value label above or below plot to avoid clipping
@@ -192,7 +201,7 @@ export default function WeatherChart({
             fontSize={20}
             fill="#666"
           >
-            {v}
+            {formatTick(v)}
           </text>
         ))}
 
