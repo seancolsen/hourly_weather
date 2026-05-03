@@ -56,6 +56,7 @@ export default function Forecast() {
   const [expandedDay, setExpandedDay] = useState(0)
   const [highlightHour, setHighlightHour] = useState<number | null>(getInitialHighlight)
   const [fromCache, setFromCache] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [zipInput, setZipInput] = useState(zipCode ?? '')
   const editFormRef = useRef<HTMLFormElement>(null)
   const zipInputRef = useRef<HTMLInputElement>(null)
@@ -157,6 +158,27 @@ export default function Forecast() {
     localStorage.setItem('chart_time_highlight_value', String(hour))
   }, [days, highlightHour])
 
+  async function handleRefresh() {
+    if (!centroid || isRefreshing) return
+    const [lon, lat] = centroid
+    setIsRefreshing(true)
+    setError(null)
+    try {
+      const fresh = await fetchPoints(lat, lon)
+      const entry: PointsCache = { ...fresh, fetchedAt: Date.now() }
+      localStorage.setItem(pointsCacheKey(lat, lon), JSON.stringify(entry))
+      const gridRes = await fetch(fresh.forecastGridData, { headers: NWS_HEADERS })
+      if (!gridRes.ok) throw new Error('NWS grid request failed')
+      const gridData = await gridRes.json()
+      setFromCache(gridRes.headers.get('X-Data-Source') === 'cache')
+      setDays(parseGridData(gridData, lat, lon, fresh.timeZone))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load weather data')
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   function handleHighlight(hour: number) {
     setHighlightHour(hour)
     localStorage.setItem('chart_time_highlight_value', String(hour))
@@ -208,6 +230,7 @@ export default function Forecast() {
   }, [])
 
   const loading = !days && !error
+  const spinning = loading || isRefreshing
 
   return (
     <div>
@@ -236,9 +259,32 @@ export default function Forecast() {
             </Button>
           </form>
         </span>
-        <button className="text-xl leading-none" aria-label="Menu">
-          ☰
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={spinning || !centroid}
+            className="leading-none disabled:opacity-50 cursor-pointer"
+            aria-label="Refresh"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`w-5 h-5 ${spinning ? 'animate-spin' : ''}`}
+            >
+              <path d="M21 12a9 9 0 1 1-3-6.7" />
+              <polyline points="21 3 21 9 15 9" />
+            </svg>
+          </button>
+          <button className="text-xl leading-none" aria-label="Menu">
+            ☰
+          </button>
+        </div>
       </header>
 
       {fromCache && (
