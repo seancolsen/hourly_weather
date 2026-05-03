@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import Input from './components/Input'
 import Button from './components/Button'
 
 export default function Home() {
   const [zip, setZip] = useState('')
   const navigate = useNavigate()
+  const lastZip = localStorage.getItem('last_zip')
+  if (lastZip) return <Navigate to={`/${lastZip}`} replace />
+
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

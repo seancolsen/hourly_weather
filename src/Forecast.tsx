@@ -66,6 +66,7 @@ export default function Forecast() {
     const cacheKey = `zip_centroid_${zipCode}`
     const cached = localStorage.getItem(cacheKey)
     if (cached) {
+      localStorage.setItem('last_zip', zipCode)
       setCentroid(JSON.parse(cached))
       return
     }
@@ -78,6 +79,7 @@ export default function Forecast() {
           return
         }
         localStorage.setItem(cacheKey, JSON.stringify(value))
+        localStorage.setItem('last_zip', zipCode)
         setCentroid(value)
       })
       .catch(() => setError('Failed to load zip code data'))
