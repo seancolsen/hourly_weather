@@ -28,7 +28,7 @@ export default function Home() {
             value={zip}
             onChange={(e) => setZip(e.target.value)}
           />
-          <Button type="submit">🡆</Button>
+          <Button type="submit">Go</Button>
         </div>
       </form>
     </div>

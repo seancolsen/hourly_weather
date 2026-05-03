@@ -40,8 +40,19 @@ export default function DayRow({
         onClick={onToggle}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100"
       >
-        <span className="text-gray-500 text-sm w-4 flex-shrink-0">
-          {isExpanded ? '⯆' : '⯈'}
+        <span className="text-gray-500 w-4 flex-shrink-0 flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 12 12"
+            width="10"
+            height="10"
+            aria-hidden="true"
+            className={`transition-transform duration-200 ${
+              isExpanded ? 'rotate-90' : ''
+            }`}
+          >
+            <path d="M3 1.5 L9 6 L3 10.5 Z" fill="currentColor" />
+          </svg>
         </span>
         <div className="flex-1 min-w-0">
           <div className="font-semibold">{forecast.dayName}</div>

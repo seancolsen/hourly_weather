@@ -232,7 +232,7 @@ export default function Forecast() {
               className="bg-transparent text-white text-sm w-14 px-1 py-0.5 border border-transparent border-b-white rounded-none focus:outline-none focus:border-white focus:rounded-sm"
             />
             <Button type="submit" className="px-2! py-0.5! invisible group-focus-within:visible">
-              🡆
+              Go
             </Button>
           </form>
         </span>
