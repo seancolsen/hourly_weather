@@ -213,8 +213,8 @@ export const summarizedMetrics: SummarizedMetric[] = [
   { metric: 'temperature', summarization: 'max' },
   { metric: 'skyCover', summarization: 'ave' },
   { metric: 'probabilityOfPrecipitation', summarization: 'ave' },
-  { metric: 'windSpeed', summarization: 'ave' },
   { metric: 'quantitativePrecipitation', summarization: 'max' },
+  { metric: 'windSpeed', summarization: 'ave' },
 ]
 
 export const chartMetrics: MetricKey[] = [
@@ -222,4 +222,5 @@ export const chartMetrics: MetricKey[] = [
   'skyCover',
   'probabilityOfPrecipitation',
   'quantitativePrecipitation',
+  'windSpeed',
 ]
