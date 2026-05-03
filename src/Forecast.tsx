@@ -5,7 +5,40 @@ import DayRow from './components/DayRow'
 
 type Centroid = [number, number]
 
+type PointsCache = {
+  forecastGridData: string
+  timeZone: string
+  fetchedAt: number
+}
+
 const NWS_HEADERS = { 'User-Agent': 'wthr-app' }
+const POINTS_CACHE_TTL_MS = 2 * 24 * 60 * 60 * 1000
+
+function pointsCacheKey(lat: number, lon: number) {
+  return `points_${lat}_${lon}`
+}
+
+function readPointsCache(key: string): PointsCache | null {
+  const raw = localStorage.getItem(key)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as PointsCache
+  } catch {
+    return null
+  }
+}
+
+async function fetchPoints(lat: number, lon: number) {
+  const res = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
+    headers: NWS_HEADERS,
+  })
+  if (!res.ok) throw new Error('NWS points request failed')
+  const data = await res.json()
+  return {
+    forecastGridData: data.properties.forecastGridData as string,
+    timeZone: data.properties.timeZone as string,
+  }
+}
 
 function getInitialHighlight(): number | null {
   const stored = localStorage.getItem('chart_time_highlight_value')
@@ -49,34 +82,60 @@ export default function Forecast() {
   useEffect(() => {
     if (!centroid) return
     const [lon, lat] = centroid
+    const cacheKey = pointsCacheKey(lat, lon)
+    let cancelled = false
 
-    async function load() {
+    async function loadGrid(points: PointsCache) {
+      const gridRes = await fetch(points.forecastGridData, { headers: NWS_HEADERS })
+      if (!gridRes.ok) throw new Error('NWS grid request failed')
+      const gridData = await gridRes.json()
+      if (cancelled) return
+      setFromCache(gridRes.headers.get('X-Data-Source') === 'cache')
+      setDays(parseGridData(gridData, lat, lon, points.timeZone))
+    }
+
+    async function revalidate(current: PointsCache) {
       try {
-        const pointsRes = await fetch(
-          `https://api.weather.gov/points/${lat},${lon}`,
-          { headers: NWS_HEADERS },
-        )
-        if (!pointsRes.ok) throw new Error('NWS points request failed')
-        const pointsData = await pointsRes.json()
-        const { forecastGridData, timeZone } = pointsData.properties
+        const fresh = await fetchPoints(lat, lon)
+        if (cancelled) return
+        const unchanged =
+          fresh.forecastGridData === current.forecastGridData &&
+          fresh.timeZone === current.timeZone
+        const updated: PointsCache = { ...fresh, fetchedAt: Date.now() }
+        localStorage.setItem(cacheKey, JSON.stringify(updated))
+        if (unchanged) return
+        setDays(null)
+        await loadGrid(updated)
+      } catch {
+        // Background revalidation failure is non-fatal
+      }
+    }
 
-        const gridRes = await fetch(forecastGridData, { headers: NWS_HEADERS })
-        if (!gridRes.ok) throw new Error('NWS grid request failed')
-        const gridData = await gridRes.json()
-
-        const servedFromCache =
-          pointsRes.headers.get('X-Data-Source') === 'cache' ||
-          gridRes.headers.get('X-Data-Source') === 'cache'
-        setFromCache(servedFromCache)
-
-        const parsed = parseGridData(gridData, lat, lon, timeZone)
-        setDays(parsed)
+    async function run() {
+      try {
+        const cached = readPointsCache(cacheKey)
+        if (cached) {
+          await loadGrid(cached)
+          if (Date.now() - cached.fetchedAt > POINTS_CACHE_TTL_MS) {
+            revalidate(cached)
+          }
+          return
+        }
+        const fresh = await fetchPoints(lat, lon)
+        if (cancelled) return
+        const entry: PointsCache = { ...fresh, fetchedAt: Date.now() }
+        localStorage.setItem(cacheKey, JSON.stringify(entry))
+        await loadGrid(entry)
       } catch (e) {
+        if (cancelled) return
         setError(e instanceof Error ? e.message : 'Failed to load weather data')
       }
     }
 
-    load()
+    run()
+    return () => {
+      cancelled = true
+    }
   }, [centroid])
 
   // Set initial highlight to hour of max temp on first day
