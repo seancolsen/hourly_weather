@@ -1,5 +1,5 @@
 import { Temporal } from 'temporal-polyfill'
-import { isoToHourFraction } from './temporal'
+import { computeSunTimes } from './sunTimes'
 import { metrics, type MetricKey, type Point } from './metrics'
 
 export type { Point }
@@ -15,12 +15,10 @@ export interface DayForecast {
 
 export function parseGridData(
   gridData: Record<string, unknown>,
-  astronomicalData: { sunrise: string; sunset: string },
+  lat: number,
+  lon: number,
   timeZone: string,
 ): DayForecast[] {
-  const sunrise = isoToHourFraction(astronomicalData.sunrise, timeZone)
-  const sunset = isoToHourFraction(astronomicalData.sunset, timeZone)
-
   const metricKeys = Object.keys(metrics) as MetricKey[]
   const extracted = {} as Record<MetricKey, Map<string, Point[]>>
   for (const key of metricKeys) {
@@ -37,6 +35,7 @@ export function parseGridData(
     const plainDate = Temporal.PlainDate.from(date)
     const dayName = plainDate.toLocaleString('en-US', { weekday: 'long' })
     const monthDay = `${plainDate.month}/${plainDate.day}`
+    const { sunrise, sunset } = computeSunTimes(date, lat, lon, timeZone)
     const data = {} as Record<MetricKey, Point[]>
     for (const key of metricKeys) {
       data[key] = extracted[key].get(date) ?? []

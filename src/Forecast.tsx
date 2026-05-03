@@ -58,8 +58,7 @@ export default function Forecast() {
         )
         if (!pointsRes.ok) throw new Error('NWS points request failed')
         const pointsData = await pointsRes.json()
-        const { forecastGridData, astronomicalData, timeZone } =
-          pointsData.properties
+        const { forecastGridData, timeZone } = pointsData.properties
 
         const gridRes = await fetch(forecastGridData, { headers: NWS_HEADERS })
         if (!gridRes.ok) throw new Error('NWS grid request failed')
@@ -70,7 +69,7 @@ export default function Forecast() {
           gridRes.headers.get('X-Data-Source') === 'cache'
         setFromCache(servedFromCache)
 
-        const parsed = parseGridData(gridData, astronomicalData, timeZone)
+        const parsed = parseGridData(gridData, lat, lon, timeZone)
         setDays(parsed)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load weather data')
