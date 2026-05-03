@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { Metric, Point } from '../utils/metrics'
 
 interface WeatherChartProps {
@@ -85,6 +85,8 @@ export default function WeatherChart({
   onHighlight,
 }: WeatherChartProps) {
   const [hoveredLabel, setHoveredLabel] = useState<number | null>(null)
+  const labelTextRef = useRef<SVGTextElement>(null)
+  const [labelTextWidth, setLabelTextWidth] = useState(0)
 
   const step = metric.chartHorizontalGridLineFrequency
   const { yMin, yMax } = metric.chartRange
@@ -116,6 +118,15 @@ export default function WeatherChart({
     highlightVal !== null
       ? `${step < 1 ? highlightVal.toFixed(2) : Math.round(highlightVal)}${metric.unitLabel}`
       : null
+
+  useLayoutEffect(() => {
+    if (labelTextRef.current) {
+      setLabelTextWidth(labelTextRef.current.getComputedTextLength())
+    }
+  }, [labelText])
+
+  const labelBoxPadX = 10
+  const labelBoxWidth = Math.max(labelTextWidth + labelBoxPadX * 2, 30)
 
   // Position value label above or below plot to avoid clipping
   const labelAbove = highlightSvgY !== null && highlightSvgY > MT + CH / 2
@@ -232,14 +243,15 @@ export default function WeatherChart({
         {labelText !== null && highlightSvgY !== null && (
           <>
             <rect
-              x={highlightX - 30}
+              x={highlightX - labelBoxWidth / 2}
               y={labelY - 22}
-              width={60}
+              width={labelBoxWidth}
               height={26}
               rx={3}
               fill="#4ae242"
             />
             <text
+              ref={labelTextRef}
               x={highlightX}
               y={labelY - 4}
               textAnchor="middle"

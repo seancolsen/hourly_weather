@@ -36,7 +36,7 @@ export function parseGridData(
 
   return dates.map((date) => {
     const plainDate = Temporal.PlainDate.from(date)
-    const dayName = plainDate.toLocaleString('en-US', { weekday: 'long' })
+    const dayName = plainDate.toLocaleString('en-US', { weekday: 'short' })
     const monthDay = `${plainDate.month}/${plainDate.day}`
     const { sunrise, sunset } = computeSunTimes(date, lat, lon, timeZone)
     const data = {} as Record<MetricKey, Point[]>
