@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { parseGridData, type DayForecast } from './utils/nwsParser'
 import DayRow from './components/DayRow'
+import Button from './components/Button'
 
 type Centroid = [number, number]
 
@@ -48,12 +49,16 @@ function getInitialHighlight(): number | null {
 
 export default function Forecast() {
   const { zipCode } = useParams<{ zipCode: string }>()
+  const navigate = useNavigate()
   const [centroid, setCentroid] = useState<Centroid | null>(null)
   const [days, setDays] = useState<DayForecast[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [expandedDay, setExpandedDay] = useState(0)
   const [highlightHour, setHighlightHour] = useState<number | null>(getInitialHighlight)
   const [fromCache, setFromCache] = useState(false)
+  const [zipInput, setZipInput] = useState(zipCode ?? '')
+  const editFormRef = useRef<HTMLFormElement>(null)
+  const zipInputRef = useRef<HTMLInputElement>(null)
 
   // Load centroid
   useEffect(() => {
@@ -159,16 +164,75 @@ export default function Forecast() {
     setExpandedDay((prev) => (prev === i ? -1 : i))
   }
 
+  function handleZipSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = zipInput.trim()
+    if (!trimmed) return
+    if (trimmed !== zipCode) navigate(`/${trimmed}`)
+    zipInputRef.current?.blur()
+  }
+
+  function resetZipInput() {
+    setZipInput(zipCode ?? '')
+  }
+
+  function handleZipBlur(e: React.FocusEvent<HTMLInputElement>) {
+    if (editFormRef.current?.contains(e.relatedTarget as Node | null)) return
+    resetZipInput()
+  }
+
+  function handleZipKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Escape') {
+      resetZipInput()
+      e.currentTarget.blur()
+    }
+  }
+
+  // Keep input in sync when the URL zip changes (e.g. after submit-driven navigation).
+  useEffect(() => {
+    setZipInput(zipCode ?? '')
+  }, [zipCode])
+
+  // Click outside the form blurs whatever inside it has focus (browsers don't blur on clicks to non-focusable elements).
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      const form = editFormRef.current
+      if (!form || form.contains(e.target as Node)) return
+      const active = document.activeElement
+      if (active instanceof HTMLElement && form.contains(active)) active.blur()
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [])
+
   const loading = !days && !error
 
   return (
     <div>
-      <header className="bg-gray-900 text-white flex items-center justify-between px-4 py-3">
-        <span className="text-sm font-medium tracking-wide">
-          Weather at:{' '}
-          <Link to="/" className="underline">
-            {zipCode}
-          </Link>
+      <header className="bg-gray-900 text-white flex items-center justify-between px-4 py-2">
+        <span className="text-sm font-medium tracking-wide flex items-center gap-2">
+          Weather at:
+          <form
+            ref={editFormRef}
+            onSubmit={handleZipSubmit}
+            className="group inline-flex items-center gap-2"
+          >
+            <input
+              ref={zipInputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={zipInput}
+              onChange={(e) => setZipInput(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onBlur={handleZipBlur}
+              onKeyDown={handleZipKeyDown}
+              className="bg-transparent text-white text-sm w-14 px-1 py-0.5 border border-transparent border-b-white rounded-none focus:outline-none focus:border-white focus:rounded-sm"
+            />
+            <Button type="submit" className="px-2! py-0.5! invisible group-focus-within:visible">
+              🡆
+            </Button>
+          </form>
         </span>
         <button className="text-xl leading-none" aria-label="Menu">
           ☰
