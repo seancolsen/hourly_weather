@@ -29,7 +29,10 @@ export function parseGridData(
   for (const map of Object.values(extracted)) {
     for (const date of map.keys()) dateSet.add(date)
   }
-  const dates = [...dateSet].sort()
+  const nowZdt = Temporal.Now.zonedDateTimeISO(timeZone)
+  const today = nowZdt.toPlainDate().toString()
+  const nowHour = nowZdt.hour + nowZdt.minute / 60
+  const dates = [...dateSet].sort().filter((d) => d >= today)
 
   return dates.map((date) => {
     const plainDate = Temporal.PlainDate.from(date)
@@ -38,7 +41,9 @@ export function parseGridData(
     const { sunrise, sunset } = computeSunTimes(date, lat, lon, timeZone)
     const data = {} as Record<MetricKey, Point[]>
     for (const key of metricKeys) {
-      data[key] = extracted[key].get(date) ?? []
+      const points = extracted[key].get(date) ?? []
+      data[key] =
+        date === today ? points.filter((pt) => pt[0] >= nowHour) : points
     }
     return { date, dayName, monthDay, sunrise, sunset, data }
   })
