@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Point } from '../utils/nwsParser'
 
 interface WeatherChartProps {
@@ -82,6 +83,8 @@ export default function WeatherChart({
   highlightHour,
   onHighlight,
 }: WeatherChartProps) {
+  const [hoveredLabel, setHoveredLabel] = useState<number | null>(null)
+
   const { yMin, yMax } = autoRange(points)
 
   const svgPoints: [number, number][] = points.map(([x, y]) => [
@@ -211,7 +214,7 @@ export default function WeatherChart({
           y={MT}
           width={3}
           height={CH}
-          fill="#22c55e"
+          fill="#4ae242"
           opacity={0.9}
         />
 
@@ -224,7 +227,7 @@ export default function WeatherChart({
               width={60}
               height={26}
               rx={3}
-              fill="#22c55e"
+              fill="#4ae242"
             />
             <text
               x={highlightX}
@@ -232,7 +235,7 @@ export default function WeatherChart({
               textAnchor="middle"
               fontSize={20}
               fontWeight="bold"
-              fill="white"
+              fill="black"
             >
               {labelText}
             </text>
@@ -240,21 +243,35 @@ export default function WeatherChart({
         )}
 
         {/* X-axis labels */}
-        {xLabels.map((h) => (
-          <text
-            key={h}
-            x={hourToSvgX(h)}
-            y={MT + CH + 16}
-            textAnchor="middle"
-            fontSize={20}
-            fill="#555"
-            style={{ cursor: 'pointer', userSelect: 'none' }}
-            onClick={() => onHighlight(h)}
-            textDecoration="underline"
-          >
-            {formatHour12(h)}
-          </text>
-        ))}
+        {xLabels.map((h) => {
+          const rx = hourToSvgX(h - 1)
+          const rw = hourToSvgX(h + 1) - rx
+          const isActive = h === highlightHour
+          const isHovered = h === hoveredLabel
+          const bgFill = isActive ? '#4ae242' : isHovered ? '#e5e7eb' : 'transparent'
+          return (
+            <g
+              key={h}
+              onClick={() => onHighlight(h)}
+              onMouseEnter={() => setHoveredLabel(h)}
+              onMouseLeave={() => setHoveredLabel(null)}
+              style={{ cursor: 'pointer' }}
+            >
+              <rect x={rx} y={MT + CH} width={rw} height={MB} fill={bgFill} />
+              <text
+                x={hourToSvgX(h)}
+                y={MT + CH + 16}
+                textAnchor="middle"
+                fontSize={20}
+                fill={isActive ? 'black' : "555"}
+                style={{ userSelect: 'none' }}
+                textDecoration="underline"
+              >
+                {formatHour12(h)}
+              </text>
+            </g>
+          )
+        })}
       </svg>
     </div>
   )
