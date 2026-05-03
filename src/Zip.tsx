@@ -84,7 +84,7 @@ export default function Zip() {
   useEffect(() => {
     if (!days || days.length === 0) return
     if (highlightHour !== null) return
-    const temps = days[0].temperature
+    const temps = days[0].data.temperature
     if (temps.length === 0) return
     const maxPt = temps.reduce((best, pt) => (pt[1] > best[1] ? pt : best), temps[0])
     const hour = Math.round(maxPt[0])

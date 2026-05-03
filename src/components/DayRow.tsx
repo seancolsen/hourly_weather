@@ -1,5 +1,11 @@
 import { useRef } from 'react'
 import type { DayForecast } from '../utils/nwsParser'
+import {
+  metrics,
+  summarizedMetrics,
+  chartMetrics,
+  type Point,
+} from '../utils/metrics'
 import WeatherChart from './WeatherChart'
 
 interface DayRowProps {
@@ -10,8 +16,10 @@ interface DayRowProps {
   onHighlight: (hour: number) => void
 }
 
-function avg(values: number[]): number {
-  if (values.length === 0) return 0
+function summarize(points: Point[], method: 'max' | 'ave'): number {
+  if (points.length === 0) return 0
+  const values = points.map((p) => p[1])
+  if (method === 'max') return Math.max(...values)
   return values.reduce((s, v) => s + v, 0) / values.length
 }
 
@@ -23,20 +31,7 @@ export default function DayRow({
   onHighlight,
 }: DayRowProps) {
   const contentRef = useRef<HTMLDivElement>(null)
-
-  const maxTemp = Math.round(Math.max(...forecast.temperature.map((p) => p[1])))
-  const avgCloud = Math.round(avg(forecast.cloudCover.map((p) => p[1])))
-  const maxPrecip = Math.round(Math.max(...forecast.precipProbability.map((p) => p[1])))
-  const avgWind = Math.round(avg(forecast.windSpeed.map((p) => p[1])))
-
   const chartDate = `${forecast.dayName} ${forecast.monthDay}`
-  const sharedChartProps = {
-    date: chartDate,
-    sunrise: forecast.sunrise,
-    sunset: forecast.sunset,
-    highlightHour,
-    onHighlight,
-  }
 
   return (
     <div className="border-b border-gray-200">
@@ -53,26 +48,23 @@ export default function DayRow({
           <div className="text-sm text-gray-500">{forecast.monthDay}</div>
         </div>
         <div className="flex gap-4 text-sm flex-shrink-0">
-          <span className="flex flex-col items-center gap-0.5">
-            <span>🌡️</span>
-            <span className="text-xs font-medium">{maxTemp}°F</span>
-            <span className="text-xs text-gray-400">max</span>
-          </span>
-          <span className="flex flex-col items-center gap-0.5">
-            <span>☁️</span>
-            <span className="text-xs font-medium">{avgCloud}%</span>
-            <span className="text-xs text-gray-400">ave</span>
-          </span>
-          <span className="flex flex-col items-center gap-0.5">
-            <span>💧</span>
-            <span className="text-xs font-medium">{maxPrecip}%</span>
-            <span className="text-xs text-gray-400">max</span>
-          </span>
-          <span className="flex flex-col items-center gap-0.5">
-            <span>💨</span>
-            <span className="text-xs font-medium">{avgWind}mph</span>
-            <span className="text-xs text-gray-400">ave</span>
-          </span>
+          {summarizedMetrics.map(({ metric: key, summarization }) => {
+            const m = metrics[key]
+            const val = Math.round(summarize(forecast.data[key], summarization))
+            return (
+              <span
+                key={key}
+                className="flex flex-col items-center gap-0.5"
+              >
+                <span>{m.emoji}</span>
+                <span className="text-xs font-medium">
+                  {val}
+                  {m.unitLabel}
+                </span>
+                <span className="text-xs text-gray-400">{summarization}</span>
+              </span>
+            )
+          })}
         </div>
       </button>
 
@@ -89,30 +81,18 @@ export default function DayRow({
         }}
       >
         <div className="pb-4">
-          <WeatherChart
-            {...sharedChartProps}
-            title="Temperature"
-            icon="🌡️"
-            points={forecast.temperature}
-            unit="°F"
-            color="#e05c3a"
-          />
-          <WeatherChart
-            {...sharedChartProps}
-            title="Clouds"
-            icon="☁️"
-            points={forecast.cloudCover}
-            unit="%"
-            color="#888888"
-          />
-          <WeatherChart
-            {...sharedChartProps}
-            title="Chance of Rain"
-            icon="💧"
-            points={forecast.precipProbability}
-            unit="%"
-            color="#4a7fc1"
-          />
+          {chartMetrics.map((key) => (
+            <WeatherChart
+              key={key}
+              metric={metrics[key]}
+              points={forecast.data[key]}
+              date={chartDate}
+              sunrise={forecast.sunrise}
+              sunset={forecast.sunset}
+              highlightHour={highlightHour}
+              onHighlight={onHighlight}
+            />
+          ))}
         </div>
       </div>
     </div>

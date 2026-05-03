@@ -1,13 +1,10 @@
 import { useState } from 'react'
-import type { Point } from '../utils/nwsParser'
+import type { Metric, Point } from '../utils/metrics'
 
 interface WeatherChartProps {
-  title: string
+  metric: Metric
   date: string
-  icon: string
   points: Point[]
-  unit: string
-  color: string
   sunrise: number
   sunset: number
   highlightHour: number
@@ -72,12 +69,9 @@ function formatHour12(h: number): string {
 }
 
 export default function WeatherChart({
-  title,
+  metric,
   date,
-  icon,
   points,
-  unit,
-  color,
   sunrise,
   sunset,
   highlightHour,
@@ -85,7 +79,9 @@ export default function WeatherChart({
 }: WeatherChartProps) {
   const [hoveredLabel, setHoveredLabel] = useState<number | null>(null)
 
-  const { yMin, yMax } = autoRange(points)
+  const { yMin, yMax } = metric.chartRange
+    ? { yMin: metric.chartRange.min, yMax: metric.chartRange.max }
+    : autoRange(points)
 
   const svgPoints: [number, number][] = points.map(([x, y]) => [
     hourToSvgX(x),
@@ -108,7 +104,9 @@ export default function WeatherChart({
     highlightVal !== null ? valToSvgY(highlightVal, yMin, yMax) : null
 
   const labelText =
-    highlightVal !== null ? `${Math.round(highlightVal)}${unit}` : null
+    highlightVal !== null
+      ? `${Math.round(highlightVal)}${metric.unitLabel}`
+      : null
 
   // Position value label above or below plot to avoid clipping
   const labelAbove = highlightSvgY !== null && highlightSvgY > MT + CH / 2
@@ -126,7 +124,7 @@ export default function WeatherChart({
     <div>
       <div className="flex gap-2 items-baseline px-2 pt-2">
         <span className="text-sm font-medium">
-          {icon} {title}
+          {metric.emoji} {metric.name}
         </span>
         <span className="text-xs text-gray-400">{date}</span>
       </div>
@@ -203,7 +201,7 @@ export default function WeatherChart({
           <path
             d={pathD}
             fill="none"
-            stroke={color}
+            stroke={metric.plotColor}
             strokeWidth={2}
           />
         )}
