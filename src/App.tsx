@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Home from './Home'
-import Zip from './Zip'
+import Forecast from './Forecast'
 
 const router = createBrowserRouter([
   {
@@ -9,7 +9,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/:zipCode',
-    element: <Zip />,
+    element: <Forecast />,
   },
 ])
 

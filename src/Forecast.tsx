@@ -13,7 +13,7 @@ function getInitialHighlight(): number | null {
   return null
 }
 
-export default function Zip() {
+export default function Forecast() {
   const { zipCode } = useParams<{ zipCode: string }>()
   const [centroid, setCentroid] = useState<Centroid | null>(null)
   const [days, setDays] = useState<DayForecast[] | null>(null)

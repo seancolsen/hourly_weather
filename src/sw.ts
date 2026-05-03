@@ -11,7 +11,7 @@ declare const self: ServiceWorkerGlobalScope
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
-// Tag cache-served responses so Zip.tsx can show the staleness banner.
+// Tag cache-served responses so Forecast.tsx can show the staleness banner.
 // This hook only fires when the network fails/times out and SW falls back to cache.
 const cacheTagPlugin: WorkboxPlugin = {
   cachedResponseWillBeUsed: async ({ cachedResponse }) => {
