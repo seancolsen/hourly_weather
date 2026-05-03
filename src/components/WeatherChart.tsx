@@ -13,10 +13,10 @@ interface WeatherChartProps {
 
 // SVG coordinate system
 const VB_W = 800
-const VB_H = 320
+const VB_H = 328
 const ML = 42 // left margin (y-axis labels)
 const MR = 10
-const MT = 8
+const MT = 16
 const MB = 28 // bottom margin (x-axis labels)
 const CW = VB_W - ML - MR // chart width: 748
 const CH = VB_H - MT - MB // chart height: 124
@@ -131,7 +131,10 @@ export default function WeatherChart({
 
   return (
     <div>
-      <div className="flex gap-2 items-baseline px-2 pt-2">
+      <div
+        className="flex gap-2 items-baseline pr-2 pt-2 -mb-1"
+        style={{ paddingLeft: `${(ML / VB_W) * 100}%` }}
+      >
         <span className="text-sm font-medium">
           {metric.emoji} {metric.name}
         </span>
@@ -267,12 +270,12 @@ export default function WeatherChart({
               <rect x={rx} y={MT + CH} width={rw} height={MB} fill={bgFill} />
               <text
                 x={hourToSvgX(h)}
-                y={MT + CH + 16}
+                y={MT + CH + 22}
                 textAnchor="middle"
                 fontSize={20}
                 fill={isActive ? 'black' : "555"}
                 style={{ userSelect: 'none' }}
-                textDecoration="underline"
+                textDecoration={isActive || isHovered ? 'none' : 'underline'}
               >
                 {formatHour12(h)}
               </text>
