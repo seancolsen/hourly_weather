@@ -89,6 +89,39 @@ export default function WeatherChart({
   const [labelTextWidth, setLabelTextWidth] = useState(0)
 
   const step = metric.chartHorizontalGridLineFrequency
+  const allSameValue =
+    points.length > 0 && points.every((p) => p[1] === points[0][1])
+
+  if (allSameValue) {
+    const v = points[0][1]
+    const formatted =
+      step < 1 && !Number.isInteger(v) ? v.toFixed(2) : String(Math.round(v))
+    return (
+      <div>
+        <div
+          className="flex gap-2 items-baseline pr-2 pt-2 -mb-1"
+          style={{ paddingLeft: `${(ML / VB_W) * 100}%` }}
+        >
+          <span className="text-sm font-medium">
+            {metric.emoji} {metric.name}
+          </span>
+          <span className="text-xs text-gray-400">{date}</span>
+        </div>
+        <div
+          className="border-[1.5px] border-[#aaaaaa] mt-2 px-2 py-1 text-sm"
+          style={{
+            marginLeft: `${(ML / VB_W) * 100}%`,
+            marginRight: `${(MR / VB_W) * 100}%`,
+          }}
+        >
+          {formatted}
+          {metric.unitLabel}
+          <span className='ml-2 text-gray-400'>(all day)</span>
+        </div>
+      </div>
+    )
+  }
+
   const { yMin, yMax } = metric.chartRange
     ? { yMin: metric.chartRange.min, yMax: metric.chartRange.max }
     : autoRange(points, step)
