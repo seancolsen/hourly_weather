@@ -34,45 +34,43 @@ export default function DayRow({
   const chartDate = `${forecast.dayName} ${forecast.monthDay}`
 
   return (
-    <div className="border-b border-gray-200">
+    <div className="border-b border-gray-200 col-span-full grid grid-cols-subgrid">
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-1 px-2 py-2 text-left hover:bg-gray-50 active:bg-gray-100 focus:outline-none"
+        className="col-span-full grid grid-cols-subgrid items-center gap-4 px-2 py-2 text-left hover:bg-gray-50 active:bg-gray-100 focus:outline-none"
       >
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0">
           <div className="font-semibold">{forecast.dayName}</div>
           <div className="text-sm text-gray-500">{forecast.monthDay}</div>
         </div>
-        <div className="flex gap-4 text-sm flex-shrink-0">
-          {summarizedMetrics.map(({ metric: key, summarization }) => {
-            const m = metrics[key]
-            const raw = summarize(forecast.data[key], summarization)
-            const val =
-              m.chartHorizontalGridLineFrequency < 1
-                ? raw.toFixed(2)
-                : Math.round(raw)
-            return (
-              <span
-                key={key}
-                className="flex flex-col items-center"
-              >
-                <span>{m.emoji}</span>
-                <span className="text-xs font-medium">
-                  {val}
-                  {m.unitLabel}
-                </span>
-                <span className="text-xs text-gray-400">{summarization}</span>
+        {summarizedMetrics.map(({ metric: key, summarization }) => {
+          const m = metrics[key]
+          const raw = summarize(forecast.data[key], summarization)
+          const val =
+            m.chartHorizontalGridLineFrequency < 1
+              ? raw.toFixed(2)
+              : Math.round(raw)
+          return (
+            <span
+              key={key}
+              className="flex flex-col items-center text-sm"
+            >
+              <span>{m.emoji}</span>
+              <span className="text-xs font-medium">
+                {val}
+                {m.unitLabel}
               </span>
-            )
-          })}
-        </div>
+              <span className="text-xs text-gray-400">{summarization}</span>
+            </span>
+          )
+        })}
       </button>
 
       {/* Expandable chart section */}
       <div
         ref={contentRef}
-        className="overflow-hidden transition-all duration-300"
+        className="col-span-full overflow-hidden transition-all duration-300"
         style={{
           maxHeight: isExpanded
             ? contentRef.current

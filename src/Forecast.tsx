@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { parseGridData, type DayForecast } from './utils/nwsParser'
+import { summarizedMetrics } from './utils/metrics'
 import DayRow from './components/DayRow'
 import Button from './components/Button'
 
@@ -297,7 +298,12 @@ export default function Forecast() {
       {loading && <p className="p-4 text-gray-500">Loading…</p>}
 
       {days && highlightHour !== null && (
-        <div>
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: `1fr repeat(${summarizedMetrics.length}, auto)`,
+          }}
+        >
           {days.map((day, i) => (
             <DayRow
               key={day.date}
