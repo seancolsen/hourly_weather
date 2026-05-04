@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Temporal } from 'temporal-polyfill'
 import { useNavigate, useParams } from 'react-router-dom'
 import { parseGridData, type DayForecast } from './utils/nwsParser'
 import { summarizedMetrics } from './utils/metrics'
@@ -55,6 +56,8 @@ export default function Forecast() {
   const [days, setDays] = useState<DayForecast[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [expandedDay, setExpandedDay] = useState(0)
+  const [timeZone, setTimeZone] = useState<string | null>(null)
+  const initialExpandSet = useRef(false)
   const [highlightHour, setHighlightHour] = useState<number | null>(getInitialHighlight)
   const [fromCache, setFromCache] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -100,6 +103,7 @@ export default function Forecast() {
       const gridData = await gridRes.json()
       if (cancelled) return
       setFromCache(gridRes.headers.get('X-Data-Source') === 'cache')
+      setTimeZone(points.timeZone)
       setDays(parseGridData(gridData, lat, lon, points.timeZone))
     }
 
@@ -159,6 +163,16 @@ export default function Forecast() {
     localStorage.setItem('chart_time_highlight_value', String(hour))
   }, [days, highlightHour])
 
+  // Open tomorrow by default when loaded after today's sunset
+  useEffect(() => {
+    if (!days || days.length < 2 || !timeZone) return
+    if (initialExpandSet.current) return
+    initialExpandSet.current = true
+    const now = Temporal.Now.zonedDateTimeISO(timeZone)
+    const nowHour = now.hour + now.minute / 60
+    if (nowHour > days[0].sunset) setExpandedDay(1)
+  }, [days, timeZone])
+
   async function handleRefresh() {
     if (!centroid || isRefreshing) return
     const [lon, lat] = centroid
@@ -172,6 +186,7 @@ export default function Forecast() {
       if (!gridRes.ok) throw new Error('NWS grid request failed')
       const gridData = await gridRes.json()
       setFromCache(gridRes.headers.get('X-Data-Source') === 'cache')
+      setTimeZone(fresh.timeZone)
       setDays(parseGridData(gridData, lat, lon, fresh.timeZone))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load weather data')
