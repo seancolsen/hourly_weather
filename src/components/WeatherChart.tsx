@@ -263,14 +263,24 @@ export default function WeatherChart({
         )}
 
         {/* Highlight bar */}
-        <rect
-          x={highlightX - 1.5}
-          y={MT}
-          width={3}
-          height={CH}
-          fill="#4ae242"
-          opacity={0.9}
-        />
+        {highlightSvgY !== null && (
+          <>
+            <rect
+              x={highlightX - 3}
+              y={highlightSvgY}
+              width={6}
+              height={MT + CH - highlightSvgY}
+              fill="#4ae242"
+              opacity={0.9}
+            />
+            <circle
+              cx={highlightX}
+              cy={highlightSvgY}
+              r={5}
+              fill="#4ae242"
+            />
+          </>
+        )}
 
         {/* Highlight value label */}
         {labelText !== null && highlightSvgY !== null && (
