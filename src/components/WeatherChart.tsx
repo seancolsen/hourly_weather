@@ -92,6 +92,18 @@ export default function WeatherChart({
   const allSameValue =
     points.length > 0 && points.every((p) => p[1] === points[0][1])
 
+  const highlightVal = interpolateY(points, highlightHour)
+  const labelText =
+    highlightVal !== null
+      ? `${step < 1 ? highlightVal.toFixed(2) : Math.round(highlightVal)}${metric.unitLabel}`
+      : null
+
+  useLayoutEffect(() => {
+    if (labelTextRef.current) {
+      setLabelTextWidth(labelTextRef.current.getComputedTextLength())
+    }
+  }, [labelText])
+
   if (allSameValue) {
     const v = points[0][1]
     const formatted =
@@ -143,20 +155,8 @@ export default function WeatherChart({
 
   // Highlight
   const highlightX = hourToSvgX(highlightHour)
-  const highlightVal = interpolateY(points, highlightHour)
   const highlightSvgY =
     highlightVal !== null ? valToSvgY(highlightVal, yMin, yMax) : null
-
-  const labelText =
-    highlightVal !== null
-      ? `${step < 1 ? highlightVal.toFixed(2) : Math.round(highlightVal)}${metric.unitLabel}`
-      : null
-
-  useLayoutEffect(() => {
-    if (labelTextRef.current) {
-      setLabelTextWidth(labelTextRef.current.getComputedTextLength())
-    }
-  }, [labelText])
 
   const labelBoxPadX = 10
   const labelBoxWidth = Math.max(labelTextWidth + labelBoxPadX * 2, 30)
